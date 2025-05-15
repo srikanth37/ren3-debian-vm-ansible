@@ -6,11 +6,30 @@
     update_cache: yes
   become: true
 
-- name: Add FFmpeg PPA (jonathonf/ffmpeg-4 or similar trusted PPA)
+- name: Determine FFmpeg PPA for this Ubuntu release
+  set_fact:
+    ffmpeg_ppa: >
+      {% set m = {
+        'focal': 'ppa:savoury1/ffmpeg4',
+        'jammy': 'ppa:savoury1/ffmpeg5',
+        'noble': 'ppa:savoury1/ffmpeg5'
+      } %}
+      {{ m[ansible_lsb.codename] | default('') }}
+
+- name: Add FFmpeg PPA if one is defined
   ansible.builtin.apt_repository:
-    repo: ppa:savoury1/ffmpeg4
+    repo: "{{ 'deb http://ppa.launchpad.net/savoury1/' + (ansible_lsb.codename == 'focal' and 'ffmpeg4' or 'ffmpeg5') + '/ubuntu ' + ansible_lsb.codename + ' main' }}"
     state: present
+    filename: "savoury1-ffmpeg"
+    validate_certs: yes
+  when: ffmpeg_ppa != ''
   become: true
+
+- name: Install FFmpeg
+  ansible.builtin.apt:
+    name: ffmpeg
+    state: present
+    update_cache: yes
 
 - name: Update apt cache after adding PPA
   ansible.builtin.apt:
@@ -36,10 +55,28 @@
     state: present
   become: true
 
-- name: Install libdav1d (official Ubuntu packages)
+- name: Determine Ubuntu codename
+  ansible.builtin.set_fact:
+    ubuntu_codename: "{{ ansible_facts.lsb.codename }}"
+
+- name: Map libdav1d runtime package per release
+  ansible.builtin.set_fact:
+    libdav1d_pkg: >-
+      {% if ubuntu_codename in ['bionic','focal'] %}
+        libdav1d5
+      {% elif ubuntu_codename in ['jammy'] %}
+        libdav1d6
+      {% elif ubuntu_codename in ['noble'] %}
+        libdav1d7
+      {% else %}
+        libdav1d    # generic fallback
+      {% endif %}
+
+- name: Install the appropriate libdav1d runtime
   ansible.builtin.apt:
-    name: libdav1d5
+    name: "{{ libdav1d_pkg }}"
     state: present
+    update_cache: yes
   become: true
 
 - name: Clean apt cache
