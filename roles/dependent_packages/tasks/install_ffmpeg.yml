@@ -1,5 +1,5 @@
 ---
-- name: Ensure software-properties-common is installed (for add-apt-repository)
+- name: Ensure software-properties-common is installed
   ansible.builtin.apt:
     name: software-properties-common
     state: present
@@ -7,31 +7,30 @@
   become: true
 
 - name: Determine FFmpeg PPA for this Ubuntu release
-  set_fact:
-    ffmpeg_ppa: >
-      {% set m = {
-        'focal': 'ppa:savoury1/ffmpeg4',
-        'jammy': 'ppa:savoury1/ffmpeg5',
-        'noble': 'ppa:savoury1/ffmpeg5'
-      } %}
-      {{ m[ansible_lsb.codename] | default('') }}
+  ansible.builtin.set_fact:
+    ffmpeg_ppa_map:
+      focal:  ppa:savoury1/ffmpeg4
+      jammy:  ppa:savoury1/ffmpeg5
+      noble:  ppa:savoury1/ffmpeg5
+    ffmpeg_ppa: "{{ ffmpeg_ppa_map[ansible_lsb.codename] | default('') }}"
 
-- name: Add FFmpeg PPA if one is defined
-  ansible.builtin.apt_repository:
-    repo: "{{ 'deb http://ppa.launchpad.net/savoury1/' + (ansible_lsb.codename == 'focal' and 'ffmpeg4' or 'ffmpeg5') + '/ubuntu ' + ansible_lsb.codename + ' main' }}"
+- name: Add GPG key for savoury1 FFmpeg PPA (Ubuntu only)
+  ansible.builtin.apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 374C7797FB006459
     state: present
-    filename: "savoury1-ffmpeg"
-    validate_certs: yes
-  when: ffmpeg_ppa != ''
+  when: ansible_distribution == 'Ubuntu' and ffmpeg_ppa != ''
   become: true
 
-- name: Install FFmpeg
-  ansible.builtin.apt:
-    name: ffmpeg
+- name: Add FFmpeg PPA (Ubuntu only)
+  ansible.builtin.apt_repository:
+    repo: "{{ ffmpeg_ppa }}"
     state: present
-    update_cache: yes
+    filename: savoury1-ffmpeg
+  when: ansible_distribution == 'Ubuntu' and ffmpeg_ppa != ''
+  become: true
 
-- name: Update apt cache after adding PPA
+- name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
   become: true
@@ -64,19 +63,26 @@
     libdav1d_pkg: >-
       {% if ubuntu_codename in ['bionic','focal'] %}
         libdav1d5
-      {% elif ubuntu_codename in ['jammy'] %}
+      {% elif ubuntu_codename == 'jammy' %}
         libdav1d6
-      {% elif ubuntu_codename in ['noble'] %}
+      {% elif ubuntu_codename == 'noble' %}
         libdav1d7
       {% else %}
-        libdav1d    # generic fallback
+        libdav1d
       {% endif %}
 
-- name: Install the appropriate libdav1d runtime
+- name: Check if libdav1d package is available
+  ansible.builtin.shell: "apt-cache show {{ libdav1d_pkg }}"
+  register: dav1d_check
+  changed_when: false
+  failed_when: false
+
+- name: Install the appropriate libdav1d runtime if available
   ansible.builtin.apt:
     name: "{{ libdav1d_pkg }}"
     state: present
     update_cache: yes
+  when: dav1d_check.rc == 0
   become: true
 
 - name: Clean apt cache
