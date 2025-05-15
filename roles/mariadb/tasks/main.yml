@@ -18,7 +18,6 @@
   apt:
     name:
       - libdbi-perl
-      - libaio1
       - lsof
       - rsync
       - socat

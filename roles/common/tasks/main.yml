@@ -39,7 +39,6 @@
       - libx11-dev
       - python3
       - python3-lib2to3
-      - python3-distutils
     state: present
 
 - name: Create necessary directories

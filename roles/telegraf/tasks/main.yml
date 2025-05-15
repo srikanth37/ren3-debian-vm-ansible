@@ -1,14 +1,27 @@
 ---
-- name: Add InfluxData GPG key
-  ansible.builtin.apt_key:
+- name: Download InfluxData GPG key
+  ansible.builtin.get_url:
     url: https://repos.influxdata.com/influxdata-archive.key
-    state: present
+    dest: /tmp/influxdata-archive.key
+    mode: '0644'
+
+- name: Verify checksum of InfluxData GPG key
+  ansible.builtin.shell: |
+    echo "943666881a1b8d9b849b74caebf02d3465d6beb716510d86a39f6c8e8dac7515  /tmp/influxdata-archive.key" | sha256sum -c -
+  register: checksum_result
+  failed_when: "'OK' not in checksum_result.stdout"
+
+- name: Convert InfluxData GPG key to GPG format
+  ansible.builtin.command: gpg --dearmor -o /etc/apt/trusted.gpg.d/influxdata-archive.gpg /tmp/influxdata-archive.key
+  args:
+    creates: /etc/apt/trusted.gpg.d/influxdata-archive.gpg
+  become: true
 
 - name: Add InfluxData APT repository
   ansible.builtin.apt_repository:
-    repo: 'deb https://repos.influxdata.com/ubuntu {{ ansible_distribution_release }} stable'
-    state: present
+    repo: 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive.gpg] https://repos.influxdata.com/debian stable main'
     filename: influxdata
+    state: present
 
 - name: Update apt cache
   ansible.builtin.apt:
