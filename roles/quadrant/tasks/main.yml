@@ -59,6 +59,7 @@
   pip:
     name: docker
     executable: pip3
+    extra_args: --break-system-packages
   become: true
 
 - name: Create Qdrant storage directory
