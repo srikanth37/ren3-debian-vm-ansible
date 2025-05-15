@@ -55,6 +55,12 @@
       - python3-pip
     state: present
 
+- name: Install Docker SDK for Python
+  pip:
+    name: docker
+    executable: pip3
+  become: true
+
 - name: Create Qdrant storage directory
   file:
     path: "{{ qdrant_storage_dir }}"
