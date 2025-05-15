@@ -1,0 +1,49 @@
+---
+- name: Install NGINX
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure /etc/nginx/conf.d exists
+  ansible.builtin.file:
+    path: /etc/nginx/conf.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Copy NGINX ren3.conf configuration
+  ansible.builtin.template:
+    src: ren3.conf
+    dest: /etc/nginx/conf.d/ren3.conf
+    mode: '0644'
+  become: true
+
+- name: Copy nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    mode: '0644'
+  become: true
+
+- name: Copy ren3 ssl certificate for your domain
+  ansible.builtin.template:
+    src: ren3ssl.crt
+    dest: /etc/ssl/certs/ren3ssl.crt
+    mode: '0644'
+  become: true
+
+- name: Copy ren3 ssl certificate key for your domain
+  ansible.builtin.template:
+    src: ren3ssl.key
+    dest: /etc/ssl/certs/ren3ssl.key
+    mode: '0644'
+  become: true
+
+- name: Start and enable NGINX service
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  become: true

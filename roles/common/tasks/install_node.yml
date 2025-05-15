@@ -1,0 +1,43 @@
+---
+- name: Remove existing Node.js packages
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    state: absent
+    purge: yes
+    autoremove: yes
+  become: true
+
+- name: Add NodeSource Node.js 20.x repo (for Debian/Ubuntu)
+  ansible.builtin.shell: curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+  become: true
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure npm is at version 10.5.0
+  community.general.npm:
+    name: npm
+    version: "10.5.0"
+    global: yes
+  become: true
+
+- name: Ensure npm is the latest version (optional, can conflict with above)
+  community.general.npm:
+    name: npm
+    global: yes
+    state: latest
+  become: true
+
+- name: Install PM2 globally
+  community.general.npm:
+    name: pm2
+    global: yes
+  become: true

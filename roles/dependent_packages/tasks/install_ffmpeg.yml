@@ -1,0 +1,49 @@
+---
+- name: Ensure software-properties-common is installed (for add-apt-repository)
+  ansible.builtin.apt:
+    name: software-properties-common
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Add FFmpeg PPA (jonathonf/ffmpeg-4 or similar trusted PPA)
+  ansible.builtin.apt_repository:
+    repo: ppa:savoury1/ffmpeg4
+    state: present
+  become: true
+
+- name: Update apt cache after adding PPA
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+
+- name: Install FFmpeg and development headers
+  ansible.builtin.apt:
+    name:
+      - ffmpeg
+      - libavcodec-dev
+      - libavformat-dev
+      - libavfilter-dev
+      - libavdevice-dev
+    state: present
+  become: true
+
+- name: Install LADSPA and Rubberband
+  ansible.builtin.apt:
+    name:
+      - ladspa-sdk
+      - rubberband-cli
+    state: present
+  become: true
+
+- name: Install libdav1d (official Ubuntu packages)
+  ansible.builtin.apt:
+    name: libdav1d5
+    state: present
+  become: true
+
+- name: Clean apt cache
+  ansible.builtin.apt:
+    autoclean: yes
+    autoremove: yes
+  become: true

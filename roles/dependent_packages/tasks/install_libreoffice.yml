@@ -1,0 +1,55 @@
+---
+- name: Install dependencies for LibreOffice
+  ansible.builtin.apt:
+    name:
+      - wget
+      - tar
+      - xz-utils
+      - libxinerama1
+      - libglu1-mesa
+      - openssl
+      - libnss3
+      - libcups2
+      - libcairo2
+      - libxslt1.1
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Download LibreOffice archive (.deb)
+  ansible.builtin.get_url:
+    url: https://apps.ren3.ai/downloads/debian/LibreOffice_25.2.3_Linux_x86-64_deb.tar.gz
+    dest: /tmp/LibreOffice.tar.gz
+    mode: '0644'
+
+- name: Extract LibreOffice archive
+  ansible.builtin.unarchive:
+    src: /tmp/LibreOffice.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Install LibreOffice DEBs
+  ansible.builtin.shell: |
+    dpkg -i /tmp/LibreOffice_25.2.3.2_Linux_x86-64_deb/DEBS/*.deb || apt-get install -f -y
+  become: true
+
+- name: Set LibreOffice path in .bashrc
+  ansible.builtin.lineinfile:
+    path: /home/{{ app_user }}/.bashrc
+    line: 'export PATH="/opt/libreoffice25.2/program/:$PATH"'
+    insertafter: EOF
+
+- name: Reload shell environment
+  ansible.builtin.shell: source /home/{{ app_user }}/.bashrc
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Clean up LibreOffice archive and extracted files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/LibreOffice.tar.gz
+    - /tmp/LibreOffice_25.2.3.2_Linux_x86-64_deb
+  become: true

@@ -1,0 +1,54 @@
+---
+- name: Add InfluxData GPG key
+  ansible.builtin.apt_key:
+    url: https://repos.influxdata.com/influxdata-archive.key
+    state: present
+
+- name: Add InfluxData APT repository
+  ansible.builtin.apt_repository:
+    repo: 'deb https://repos.influxdata.com/ubuntu {{ ansible_distribution_release }} stable'
+    state: present
+    filename: influxdata
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Telegraf
+  ansible.builtin.apt:
+    name: telegraf
+    state: present
+
+- name: Ensure Telegraf config directory exists
+  ansible.builtin.file:
+    path: /opt/telegraf
+    state: directory
+    mode: '0755'
+
+- name: Deploy Telegraf config to /opt
+  ansible.builtin.template:
+    src: telegraf.conf.j2
+    dest: /opt/telegraf/telegraf.conf
+    mode: '0644'
+
+- name: Create systemd override directory for Telegraf
+  ansible.builtin.file:
+    path: /etc/systemd/system/telegraf.service.d
+    state: directory
+    mode: '0755'
+
+- name: Create Telegraf systemd override to use config from /opt
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/telegraf.service.d/override.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/telegraf --config /opt/telegraf/telegraf.conf
+    mode: '0644'
+
+- name: Reload systemd and restart Telegraf
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: telegraf
+    enabled: true
+    state: restarted

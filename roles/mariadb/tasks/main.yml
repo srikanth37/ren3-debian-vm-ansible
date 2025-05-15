@@ -1,0 +1,60 @@
+---
+- name: Add MariaDB APT repository
+  get_url:
+    url: https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+    dest: /tmp/mariadb_repo_setup
+    mode: '0755'
+
+- name: Run MariaDB repository setup script
+  command: /tmp/mariadb_repo_setup
+  args:
+    creates: /etc/apt/sources.list.d/mariadb.list
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install MariaDB dependencies
+  apt:
+    name:
+      - libdbi-perl
+      - libaio1
+      - lsof
+      - rsync
+      - socat
+      - perl
+      - libmodule-load-perl
+    state: present
+
+- name: Install MariaDB server
+  apt:
+    name: mariadb-server
+    state: present
+
+- name: Start and enable MariaDB service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Install PyMySQL for Ansible MySQL modules
+  apt:
+    name: python3-pymysql
+    state: present
+
+- name: Set root password (using socket login)
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    password: "{{ mariadb_root_password }}"
+    host: localhost
+    priv: "*.*:ALL,GRANT"
+    check_implicit_admin: yes
+
+- name: Create databases
+  community.mysql.mysql_db:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ mariadb_databases }}"
