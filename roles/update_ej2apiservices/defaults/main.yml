@@ -1,6 +1,6 @@
 ---
 update: false
-archive_url: "https://apps.ren3.ai/downloads/rhel/EJ2APIServices.tar.gz"
+archive_url: "https://apps.ren3.ai/downloads/debian/EJ2APIServices.tar.gz"
 archive_path: "{{ app_home }}/files/EJ2APIServices.tar.gz"
 target_dir: "{{ app_home }}/EJ2APIServices"
 backup_dir: "{{ app_home }}/oldfiles"
