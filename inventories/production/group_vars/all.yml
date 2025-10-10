@@ -2,8 +2,6 @@ app_user: app_user_placeholder
 app_group: app_group_placeholder
 app_home: app_home_placeholder
 app_server_url: app_server_url_placeholder
-python_env_dir: /opt/app_python_env
-python_path: /opt/app_python_env/bin/python
 dotnet_version: dotnet_version_placeholder
 dotnet_dir: dotnet_dir_placeholder
 node_version: node_version_placeholder
