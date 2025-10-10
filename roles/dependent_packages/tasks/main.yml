@@ -7,16 +7,3 @@
 
 - name: Install FFmpeg
   import_tasks: install_ffmpeg.yml
-
-
-- name: Install system and custom fonts
-  import_tasks: install_fonts.yml
-
-- name: Install Python environment with required packages
-  import_tasks: install_python_env.yml
-
-- name: Install Google Chrome
-  import_tasks: install_google_chrome.yml
-
-- name: Install Puppeteer-managed Chrome Browser
-  import_tasks: install_puppeteer_browser.yml
