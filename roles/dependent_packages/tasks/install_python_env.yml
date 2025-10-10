@@ -1,0 +1,55 @@
+---
+- name: Install python3.12-venv package
+  ansible.builtin.apt:
+    name: python3.12-venv
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Create Python virtual environment directory
+  ansible.builtin.file:
+    path: "{{ python_env_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: true
+
+- name: Create Python 3.12 virtual environment
+  ansible.builtin.command:
+    cmd: "python3.12 -m venv {{ python_env_dir }}"
+    creates: "{{ python_env_dir }}/bin/pip"
+  become: true
+
+- name: Change ownership of virtual environment to app user
+  ansible.builtin.file:
+    path: "{{ python_env_dir }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    recurse: yes
+  become: true
+
+- name: Install required Python packages into the virtual environment
+  ansible.builtin.pip:
+    virtualenv: "{{ python_env_dir }}"
+    name:
+      - PyMuPDF==1.24.14
+      - Pillow==11.0.0
+      - pdfplumber==0.11.6
+      - python-docx==1.1.2
+      - pdf2docx==0.5.8
+      - pandas==2.3.1
+      - numpy==2.0.2
+      - openpyxl==3.1.5
+      - xlrd==2.0.2
+      - easyocr==1.7.2
+    state: present
+  become: true
+
+- name: Fix ownership of installed packages
+  ansible.builtin.file:
+    path: "{{ python_env_dir }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    recurse: yes
+  become: true
