@@ -1,0 +1,17 @@
+---
+- name: Install specific Puppeteer-managed Chrome browser
+  ansible.builtin.command:
+    cmd: npx puppeteer browsers install chrome@139.0.7258.66
+    chdir: "{{ app_home }}"
+    creates: "{{ app_home }}/.cache/puppeteer/chrome/linux-139.0.7258.66"
+  become: true
+  environment:
+    PATH: "/usr/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+
+- name: Fix ownership of Puppeteer cache
+  ansible.builtin.file:
+    path: "{{ app_home }}/.cache/puppeteer"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    recurse: yes
+  become: true
