@@ -10,18 +10,42 @@
       ansible.builtin.apt:
         deb: /tmp/google-chrome.deb
 
-- block:
-    - name: CHROME | Install prerequisites for Puppeteer (NodeJS)
+
+- name: CHROME | Install specific Chrome for Puppeteer
+  block:
+    - name: Create .npm and .cache directories
+      ansible.builtin.file:
+        path: "/home/{{ app_user }}/{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
       become: true
-      ansible.builtin.apt:
-        name: ["nodejs", "npm"]
+      with_items:
+        - .npm
+        - .cache
+        - .cache/puppeteer
+
+    - name: Install puppeteer globally
+      ansible.builtin.npm:
+        name: puppeteer
+        global: true
         state: present
-
-    - name: CHROME | Install specific Chrome for Puppeteer
       become: true
-      # IMPORTANT: Change 'ren3user' to the actual service account that runs your application.
-      become_user: "{{ app_user }}"
-      ansible.builtin.command: npx puppeteer browsers install chrome@139.0.7258.66
-      args:
 
-        creates: ~ren3user/.cache/puppeteer/chrome/linux-139.0.7258.66
+    - name: Install specific Chrome version for Puppeteer
+      ansible.builtin.shell: |
+        sudo -H -u {{ app_user }} bash -lc 'export HOME=/home/{{ app_user }} && cd $HOME && npx puppeteer browsers install chrome@139.0.7258.66'
+      args:
+        creates: "/home/{{ app_user }}/.cache/puppeteer/chrome/linux-139.0.7258.66"
+      become: true
+
+    - name: Set correct ownership for Puppeteer cache
+      ansible.builtin.file:
+        path: "/home/{{ app_user }}/.cache/puppeteer"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: true
+        mode: '0755'
+      become: true
