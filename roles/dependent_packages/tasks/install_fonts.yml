@@ -1,38 +1,39 @@
 ---
-- name: Install standard system fonts via apt
-  ansible.builtin.apt:
-    name:
-      - fonts-liberation
-      - fonts-liberation2
-      - fonts-thai-tlwg
-    state: present
-  become: true
+- block:
+    - name: FONTS | Install standard Debian fonts
+      become: true
+      ansible.builtin.apt:
+        name:
+          - fonts-liberation
+          - fonts-liberation2
+          - fonts-thai-tlwg
+        state: present
+        update_cache: true
 
-- name: Download and install custom Thai fonts
-  become: true
-  block:
-    - name: Download and install custom Thai fonts from URLs
-      loop:
-        - url: https://computer.ru.ac.th/downloads/1492833638_.zip
-          zip_name: THSarabunIT.zip
-          extract_dir: THSarabunIT_extracted
-          font_dir: "/usr/share/fonts/THSarabunIT๙"
-          src_path: "THSarabunIT๙/*.ttf"
-        - url: https://computer.ru.ac.th/downloads/1492833664_.zip
-          zip_name: THSarabunNew1.zip
-          extract_dir: THSarabunNew1_extracted
-          font_dir: "/usr/share/fonts/THSarabunNew1"
-          src_path: "*.ttf"
-        - url: https://computer.ru.ac.th/downloads/1492833695_.zip
-          zip_name: THFonts.zip
-          extract_dir: THFonts_extracted
-          font_dir: "/usr/share/fonts/THFonts"
-          src_path: "Fonts/*.ttf"
-      ansible.builtin.include_tasks: _install_font_pack.yml
-      loop_control:
-        loop_var: font_pack
+    - name: FONTS | Install TH Sarabun IT๙ font
+      become: true
+      ansible.builtin.unarchive:
+        src: https://computer.ru.ac.th/downloads/1492833638_.zip
+        dest: /usr/share/fonts/
+        remote_src: true
+        creates: /usr/share/fonts/THSarabunIT๙/THSarabunIT.ttf
 
-    - name: Update font cache
-      ansible.builtin.command:
-        cmd: fc-cache -fv
-      changed_when: true
+    - name: FONTS | Install PRIMARY TH Sarabun New1 font
+      become: true
+      ansible.builtin.unarchive:
+        src: https://computer.ru.ac.th/downloads/1492833664_.zip
+        dest: /usr/share/fonts/
+        remote_src: true
+        creates: /usr/share/fonts/THSarabunNew1/THSarabunNew.ttf
+
+    - name: FONTS | Install TH Fonts pack
+      become: true
+      ansible.builtin.unarchive:
+        src: https://computer.ru.ac.th/downloads/1492833695_.zip
+        dest: /usr/share/fonts/
+        remote_src: true
+        creates: /usr/share/fonts/THFonts/Angsana.ttf
+
+    - name: FONTS | Refresh font cache
+      ansible.builtin.command: fc-cache -fv
+      changed_when: false

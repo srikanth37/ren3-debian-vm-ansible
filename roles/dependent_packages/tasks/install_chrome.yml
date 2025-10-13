@@ -1,0 +1,27 @@
+---
+- name: CHROME | Install Google Chrome
+  become: true
+  block:
+    - name: Download .deb package
+      ansible.builtin.get_url:
+        url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        dest: /tmp/google-chrome.deb
+    - name: Install .deb package
+      ansible.builtin.apt:
+        deb: /tmp/google-chrome.deb
+
+- block:
+    - name: CHROME | Install prerequisites for Puppeteer (NodeJS)
+      become: true
+      ansible.builtin.apt:
+        name: ["nodejs", "npm"]
+        state: present
+
+    - name: CHROME | Install specific Chrome for Puppeteer
+      become: true
+      # IMPORTANT: Change 'ren3user' to the actual service account that runs your application.
+      become_user: "{{ app_user }}"
+      ansible.builtin.command: npx puppeteer browsers install chrome@139.0.7258.66
+      args:
+
+        creates: ~ren3user/.cache/puppeteer/chrome/linux-139.0.7258.66

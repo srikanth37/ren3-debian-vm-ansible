@@ -8,15 +8,11 @@
 - name: Install FFmpeg
   import_tasks: install_ffmpeg.yml
 
+- name: Include Python environment setup tasks
+  ansible.builtin.include_tasks: setup_python.yml
 
-- name: Install system and custom fonts
-  import_tasks: install_fonts.yml
+- name: Include Google Chrome installation tasks
+  ansible.builtin.include_tasks: install_chrome.yml
 
-- name: Install Python environment with required packages
-  import_tasks: install_python_env.yml
-
-- name: Install Google Chrome
-  import_tasks: install_google_chrome.yml
-
-- name: Install Puppeteer-managed Chrome Browser
-  import_tasks: install_puppeteer_browser.yml
+- name: Include font installation tasks
+  ansible.builtin.include_tasks: install_fonts.yml
