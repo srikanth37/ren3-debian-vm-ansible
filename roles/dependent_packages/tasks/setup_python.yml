@@ -1,0 +1,21 @@
+---
+- block:
+    - name: PYTHON | Define environment path
+      ansible.builtin.set_fact:
+        python_venv_path: "/opt/ren3/python_env"
+
+    - name: PYTHON | Install prerequisites
+      become: true
+      ansible.builtin.apt:
+        name: ["python3.12", "python3.12-venv"]
+        state: present
+
+    - name: PYTHON | Create virtual environment
+      ansible.builtin.command: "python3.12 -m venv {{ python_venv_path }}"
+      args:
+        creates: "{{ python_venv_path }}/bin/pip"
+
+    - name: PYTHON | Install required packages into virtual environment
+      ansible.builtin.pip:
+        requirements: "{{ role_path }}/files/requirements.txt"
+        virtualenv: "{{ python_venv_path }}"
