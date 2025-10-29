@@ -1,0 +1,33 @@
+---
+- name: Apply Cumulative Delta Updates for System Packages
+  hosts: all
+  gather_facts: false
+
+  # This 'version' variable will be passed from the command line using -e.
+  # If you don't pass it, the default value of "99999999" ensures
+  # that all available patches will be applied.
+  vars:
+    version: "99999999"
+
+  tasks:
+    - name: Convert the version variable to an integer for comparison
+      ansible.builtin.set_fact:
+        target_version: "{{ version | int }}"
+
+    - name: Display the target version for this run
+      ansible.builtin.debug:
+        msg: "Applying all patches up to and including version {{ target_version }}"
+
+    # ====================================================================
+    # ==                 REGISTER OF AVAILABLE PATCHES                  ==
+    # ====================================================================
+    # Add every new patch file here in chronological order. The `when`
+    # condition is what makes this system work.
+
+    - name: Apply updates for 20251001
+      ansible.builtin.include_tasks: package_updates/20251001.yml
+      when: target_version >= 20251001
+
+    - name: Apply updates for 20251004
+      ansible.builtin.include_tasks: package_updates/20251004.yml
+      when: target_version >= 20251004

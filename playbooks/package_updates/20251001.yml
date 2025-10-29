@@ -1,0 +1,6 @@
+---
+- name: "Patch 20251001: Install htop"
+  become: yes
+  ansible.builtin.apt:
+    name: htop
+    state: present

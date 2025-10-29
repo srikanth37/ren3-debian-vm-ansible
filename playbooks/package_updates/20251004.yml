@@ -1,0 +1,6 @@
+---
+- name: "Patch 20251004: Install tree"
+  become: yes
+  ansible.builtin.apt:
+    name: tree
+    state: present
