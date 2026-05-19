@@ -1,7 +1,12 @@
 ---
+- name: Validate that version_tag is provided
+  fail:
+    msg: "version_tag must be provided (e.g., -e version_tag=v1.12.1)"
+  when: version_tag | length == 0
+
 - name: Download web-main archive
   ansible.builtin.get_url:
-    url: "{{ app_server_url }}/web-main.tar.gz"
+    url: "{{ app_server_url }}/web-main-{{ version_tag }}-debian.tar.gz"
     dest: /tmp/web-main.tar.gz
   become: true
 
@@ -14,7 +19,7 @@
 
 - name: Download web archive
   ansible.builtin.get_url:
-    url: "{{ app_server_url }}/web-build.tar.gz"
+    url: "{{ app_server_url }}/web-build-{{ version_tag }}-debian.tar.gz"
     dest: /tmp/web.tar.gz
   become: true
 

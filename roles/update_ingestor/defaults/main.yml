@@ -1,6 +1,7 @@
 ---
 update: false
-archive_url: "https://apps.ren3.ai/downloads/debian/ingestor.tar.gz"
+version_tag: ""
+archive_url: "https://apps.ren3.ai/downloads/debian/ingestor-{{ version_tag }}-debian.tar.gz"
 archive_path: "{{ app_home }}/files/ingestor.tar.gz"
 target_dir: "{{ app_home }}/ingestor"
 backup_dir: "{{ app_home }}/oldfiles"

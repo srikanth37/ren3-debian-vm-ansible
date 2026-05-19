@@ -21,9 +21,14 @@
         msg: "--client must be provided when --update=1"
       when: client | length == 0
 
+    - name: Validate that version_tag is provided
+      fail:
+        msg: "version_tag must be provided when update is true (e.g., -e version_tag=v1.12.1)"
+      when: version_tag | length == 0
+
     - name: Download build archive
       ansible.builtin.get_url:
-        url: "{{ archive_url_base }}/web-{{ client }}.tar.gz"
+        url: "{{ archive_url_base }}/web-{{ client }}-{{ version_tag }}-debian.tar.gz"
         dest: "{{ archive_path }}"
         mode: '0644'
 

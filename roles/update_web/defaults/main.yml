@@ -1,6 +1,7 @@
 ---
 update: false
 client: ""
+version_tag: ""
 archive_url_base: "https://apps.ren3.ai/downloads/debian"
 archive_path: "{{ app_home }}/files/web.tar.gz"
 target_dir: "{{ app_home }}/web"
