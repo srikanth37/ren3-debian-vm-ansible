@@ -52,14 +52,9 @@
     force: true
   become: true
 
-- name: Validate that version_tag is provided
-  fail:
-    msg: "version_tag must be provided (e.g., -e version_tag=v1.12.1)"
-  when: version_tag | length == 0
-
 - name: Download EJ2APIServices archive
   ansible.builtin.get_url:
-    url: "{{ app_server_url }}/EJ2APIServices-{{ version_tag }}-debian.tar.gz"
+    url: "{{ app_server_url }}/EJ2APIServices.tar.gz"
     dest: /tmp/EJ2APIServices.tar.gz
   become: true
 
