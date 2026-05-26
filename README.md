@@ -165,6 +165,36 @@ ansible-playbook -i inventory.ini playbooks/update-ingestor.yml
 ansible-playbook -i inventory.ini playbooks/update-ej2apiservices.yml
 ```
 
+## 🏷️ Updating Components with a Specific Version
+
+To update a component to a specific version, pass the `version_tag` and `update=true` flags.
+
+### Update Web
+
+```bash
+ansible-playbook -i inventory.ini playbooks/update-web.yml -e update=true -e client=build -e version_tag=v1.x.x
+```
+
+### Update Server
+
+```bash
+ansible-playbook -i inventory.ini playbooks/update-server.yml -e update=true -e version_tag=v1.x.x
+```
+
+### Update Ingestor
+
+```bash
+ansible-playbook -i inventory.ini playbooks/update-ingestor.yml -e update=true -e version_tag=v1.x.x
+```
+> ⚠️ **Notes**
+> - `version_tag` is **required** when `update=true` (e.g. `v1.12.1`)
+> - `client` is **required** for web updates — it identifies the web build variant (e.g. `build`)
+>   - The final download URL will be: `web-{client}-{version_tag}.tar.gz`
+>   - Example: `-e client=build -e version_tag=v1.12.1` → downloads `web-build-v1.12.1.tar.gz`
+>   - Contact Ren3 team if you are unsure what `client` value to use
+> - `update=true` is **required** to trigger a fresh download — without it the playbook will restart the service using the existing archive on disk
+> - Replace `v1.x.x` with the actual version tag provided.
+
 ## 🔐 License the Product
 
 On application UI if you are getting a message like `product is not activated`, activate your Ren3 license from the server instance using this command

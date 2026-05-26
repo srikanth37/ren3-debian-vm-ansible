@@ -1,6 +1,7 @@
 ---
 update: false
-archive_url: "https://apps.ren3.ai/downloads/debian/server.tar.gz"
+version_tag: ""
+archive_url: "https://apps.ren3.ai/downloads/debian/server-{{ version_tag }}-debian.tar.gz"
 archive_path: "{{ app_home }}/files/server.tar.gz"
 target_dir: "{{ app_home }}/server"
 backup_dir: "{{ app_home }}/oldfiles"
