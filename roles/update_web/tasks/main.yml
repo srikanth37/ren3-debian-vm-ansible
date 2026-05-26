@@ -28,7 +28,7 @@
 
     - name: Download build archive
       ansible.builtin.get_url:
-        url: "{{ archive_url_base }}/web-{{ client }}-{{ version_tag }}-debian.tar.gz"
+        url: "{{ archive_url_base }}/web-{{ client }}-{{ version_tag }}.tar.gz"
         dest: "{{ archive_path }}"
         mode: '0644'
 
