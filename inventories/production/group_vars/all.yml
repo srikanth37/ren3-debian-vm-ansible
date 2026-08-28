@@ -14,6 +14,7 @@ qdrant_storage_dir: /data/qdrant
 docker_data_root: /data/docker
 mariadb_datadir: /data/mysql
 rn3_data_dir: /data/rn3-data
+python_venv_path: /data/python_env
 
 qdrant_host: qdrant_host_placeholder
 react_app_backend_url: react_app_backend_url_placeholder

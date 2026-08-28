@@ -45,8 +45,9 @@ Everything that holds growing data — Qdrant's vector storage, Docker's own ima
 | `docker_data_root`    | `/data/docker`  | Docker daemon's own `data-root`          |
 | `mariadb_datadir`     | `/data/mysql`   | MariaDB's `datadir`                      |
 | `rn3_data_dir`        | `/data/rn3-data`| Uploads/assets/configs/downloads/tessdata|
+| `python_venv_path`    | `/data/python_env`| pip packages (PyMuPDF, easyocr, etc.) for OCR/document processing |
 
-Override any of these in `inventories/production/group_vars/all.yml` if your data volume is mounted elsewhere. A compatibility symlink is kept at `{{ app_home }}/rn3-data` pointing to `rn3_data_dir`.
+Override any of these in `inventories/production/group_vars/all.yml` if your data volume is mounted elsewhere. A compatibility symlink is kept at `{{ app_home }}/rn3-data` pointing to `rn3_data_dir`. The python venv's `bin/` is added to `PATH` automatically — system-wide via `/etc/profile.d/`, and for the `rn3bp-server`/`rn3bp-ingestor` services via a systemd drop-in override, since services don't read `/etc/profile.d/`.
 
 ## 🌐 Network Configuration
 

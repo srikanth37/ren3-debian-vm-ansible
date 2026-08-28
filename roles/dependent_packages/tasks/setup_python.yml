@@ -1,9 +1,8 @@
 ---
+# python_venv_path defaults to /data/python_env (see group_vars/all.yml) so the
+# pip-installed packages here - including easyocr's torch dependency, which is
+# large - land on the data volume rather than the root disk.
 - block:
-    - name: PYTHON | Define environment path
-      ansible.builtin.set_fact:
-        python_venv_path: "/opt/ren3/python_env"
-
     - name: PYTHON | Install prerequisites
       become: true
       ansible.builtin.apt:
@@ -19,3 +18,58 @@
       ansible.builtin.pip:
         requirements: "{{ role_path }}/files/requirements.txt"
         virtualenv: "{{ python_venv_path }}"
+
+    - name: PYTHON | Add the venv to PATH for interactive/login shells
+      ansible.builtin.copy:
+        dest: /etc/profile.d/ren3-python-venv.sh
+        content: |
+          export PATH="{{ python_venv_path }}/bin:$PATH"
+        mode: '0644'
+      become: true
+
+    # Services are systemd units and don't read /etc/profile.d, so a drop-in
+    # override is needed for the venv's python (and the packages installed
+    # into it) to be picked up automatically when server/ingestor shell out
+    # to python. Drop-ins work regardless of whether the base .service file
+    # (copied later by the server/ingestor roles) already exists.
+    - name: PYTHON | Ensure systemd drop-in directories exist for services using the venv
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}.d"
+        state: directory
+        mode: '0755'
+      loop:
+        - rn3bp-server.service
+        - rn3bp-ingestor.service
+      become: true
+
+    - name: PYTHON | Put the venv's bin first on PATH for those services
+      ansible.builtin.copy:
+        dest: "/etc/systemd/system/{{ item }}.d/ren3-python-venv.conf"
+        content: |
+          [Service]
+          Environment="PATH={{ python_venv_path }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        mode: '0644'
+      loop:
+        - rn3bp-server.service
+        - rn3bp-ingestor.service
+      become: true
+
+    - name: PYTHON | Reload systemd to pick up the drop-in
+      ansible.builtin.systemd:
+        daemon_reload: yes
+      become: true
+
+    - name: PYTHON | Check which of those services are already running
+      ansible.builtin.service_facts:
+
+    - name: PYTHON | Restart already-running services so the new PATH takes effect
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - rn3bp-server.service
+        - rn3bp-ingestor.service
+      when: >
+        item in ansible_facts.services and
+        ansible_facts.services[item].state == 'running'
+      become: true
