@@ -27,6 +27,24 @@
   apt:
     update_cache: yes
 
+- name: Ensure Docker data-root directory exists
+  file:
+    path: "{{ docker_data_root }}"
+    state: directory
+    mode: '0711'
+    owner: root
+    group: root
+
+# Written before docker-ce is installed so the daemon initializes its image/
+# container/volume storage directly under docker_data_root (/data by default)
+# instead of the default /var/lib/docker on the root disk.
+- name: Configure Docker daemon data-root
+  copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ {'data-root': docker_data_root} | to_nice_json }}\n"
+    mode: '0644'
+  register: docker_daemon_config
+
 - name: Install Docker packages
   apt:
     name:
@@ -41,6 +59,12 @@
     name: docker
     state: started
     enabled: yes
+
+- name: Restart Docker to apply data-root change
+  service:
+    name: docker
+    state: restarted
+  when: docker_daemon_config is changed
 
 - name: Add current user to docker group
   user:

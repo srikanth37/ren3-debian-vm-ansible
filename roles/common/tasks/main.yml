@@ -53,26 +53,56 @@
     - web
     - EJ2APIServices
     - helper
-    - rn3-data
     - output
-    - rn3-data/assets
-    - rn3-data/assets/audio
-    - rn3-data/assets/file
-    - rn3-data/configs
-    - rn3-data/configs/web
-    - rn3-data/configs/server
-    - rn3-data/configs/ingestor
-    - rn3-data/downloads
-    - rn3-data/downloads/sites
-    - rn3-data/downloads/sites/save
-    - rn3-data/temp
-    - rn3-data/tessdata
+  become: true
+
+# rn3-data holds uploads/assets/configs/downloads (i.e. actual growing data, not
+# app code), so it lives under rn3_data_dir (/data by default) rather than
+# app_home. A compat symlink at the old app_home/rn3-data path is kept below in
+# case anything still expects it there.
+- name: Create rn3_data_dir
+  ansible.builtin.file:
+    path: "{{ rn3_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  become: true
+
+- name: Create rn3-data directory tree under {{ rn3_data_dir }}
+  ansible.builtin.file:
+    path: "{{ rn3_data_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  loop:
+    - assets
+    - assets/audio
+    - assets/file
+    - configs
+    - configs/web
+    - configs/server
+    - configs/ingestor
+    - downloads
+    - downloads/sites
+    - downloads/sites/save
+    - temp
+    - tessdata
+  become: true
+
+- name: Symlink app_home/rn3-data to rn3_data_dir for backward compatibility
+  ansible.builtin.file:
+    src: "{{ rn3_data_dir }}"
+    dest: "{{ app_home }}/rn3-data"
+    state: link
+    force: true
   become: true
 
 - name: Copy web config.json file
   ansible.builtin.template:
     src: web-config.json
-    dest: "{{ app_home }}/rn3-data/configs/web/config.json"
+    dest: "{{ rn3_data_dir }}/configs/web/config.json"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0755'
@@ -81,7 +111,7 @@
 - name: Copy server config.json file
   ansible.builtin.template:
     src: server-config.json
-    dest: "{{ app_home }}/rn3-data/configs/server/config.json"
+    dest: "{{ rn3_data_dir }}/configs/server/config.json"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0755'
@@ -90,7 +120,7 @@
 - name: Copy ingestor config.json file
   ansible.builtin.template:
     src: web-config.json
-    dest: "{{ app_home }}/rn3-data/configs/ingestor/config.json"
+    dest: "{{ rn3_data_dir }}/configs/ingestor/config.json"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0755'

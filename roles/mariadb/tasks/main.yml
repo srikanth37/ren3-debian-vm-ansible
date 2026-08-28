@@ -30,6 +30,58 @@
     name: mariadb-server
     state: present
 
+# The apt postinst already started mariadb with the default /var/lib/mysql
+# datadir; stop it so the files can be relocated to mariadb_datadir (/data by
+# default) before the service is (re)started below.
+- name: Stop MariaDB service before migrating datadir
+  service:
+    name: mariadb
+    state: stopped
+  ignore_errors: true
+
+- name: Ensure new MariaDB data directory exists
+  file:
+    path: "{{ mariadb_datadir }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0700'
+
+- name: Migrate existing MariaDB data to the new datadir
+  command: "rsync -a --exclude='lost+found' /var/lib/mysql/ {{ mariadb_datadir }}/"
+  args:
+    creates: "{{ mariadb_datadir }}/mysql"
+
+- name: Point MariaDB at the new datadir
+  copy:
+    dest: /etc/mysql/mariadb.conf.d/60-ren3-datadir.cnf
+    content: |
+      [mysqld]
+      datadir = {{ mariadb_datadir }}
+    mode: '0644'
+
+- name: Check whether the MariaDB AppArmor profile is present
+  stat:
+    path: /etc/apparmor.d/usr.sbin.mysqld
+  register: mariadb_apparmor_profile
+
+- name: Allow the new datadir in the MariaDB AppArmor profile
+  copy:
+    dest: /etc/apparmor.d/local/usr.sbin.mysqld
+    content: |
+      {{ mariadb_datadir }}/ r,
+      {{ mariadb_datadir }}/** rwk,
+    mode: '0644'
+  when: mariadb_apparmor_profile.stat.exists
+  register: mariadb_apparmor_local
+
+- name: Reload AppArmor to pick up the datadir exception
+  service:
+    name: apparmor
+    state: reloaded
+  when: mariadb_apparmor_local is changed
+  ignore_errors: true
+
 - name: Start and enable MariaDB service
   service:
     name: mariadb

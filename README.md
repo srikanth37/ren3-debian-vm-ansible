@@ -25,15 +25,28 @@ VM Prerequisites:
 ```bash
 CPU: 2core
 RAM: 8GB
-Disk: 50GB root disk, 50GB secondary disk (mounted on /opt)
+Disk: 50GB root disk, 50GB secondary disk (mounted on /data)
 ```
 
 Ensure the following are in place before using these playbooks:
 
 1. Debian instance with access to run deployment scripts
 2. Instance should have **Internet connectivity**.
-3. Instance should have a secondary disk storage of 50 GB atleast attached to it and mounted on /opt path
+3. Instance should have a secondary disk storage of 50 GB atleast attached to it and mounted on /data path
 4. You should have valid **domain names and SSL certificates** for frontend and backend.
+
+### 💾 Where data lives
+
+Everything that holds growing data — Qdrant's vector storage, Docker's own image/container/volume storage, MariaDB's datadir, and rn3-data (uploads, assets, downloads, tessdata) — defaults to living under `/data`, separate from the app code on `app_home` and the OS/root disk:
+
+| Variable            | Default        | Used by                                  |
+|----------------------|----------------|-------------------------------------------|
+| `qdrant_storage_dir`  | `/data/qdrant`  | Qdrant's docker volume mount             |
+| `docker_data_root`    | `/data/docker`  | Docker daemon's own `data-root`          |
+| `mariadb_datadir`     | `/data/mysql`   | MariaDB's `datadir`                      |
+| `rn3_data_dir`        | `/data/rn3-data`| Uploads/assets/configs/downloads/tessdata|
+
+Override any of these in `inventories/production/group_vars/all.yml` if your data volume is mounted elsewhere. A compatibility symlink is kept at `{{ app_home }}/rn3-data` pointing to `rn3_data_dir`.
 
 ## 🌐 Network Configuration
 
